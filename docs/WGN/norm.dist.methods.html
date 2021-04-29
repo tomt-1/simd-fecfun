@@ -5,10 +5,10 @@
 	<title></title>
 	<meta name="generator" content="LibreOffice 6.4.7.2 (Linux)"/>
 	<meta name="created" content="2021-04-27T14:33:22.598835411"/>
-	<meta name="changed" content="2021-04-28T09:24:43.174568441"/>
+	<meta name="changed" content="2021-04-28T14:00:36.343767091"/>
 	<style type="text/css">
 		@page { size: 8.5in 11in; margin-left: 0.79in; margin-right: 0.39in; margin-top: 0.39in; margin-bottom: 0.39in }
-		p { margin-bottom: 0.1in; line-height: 115%; background: transparent }
+		p { margin-bottom: 0.1in; background: transparent; line-height: 115%; background: transparent }
 		a:link { color: #000080; so-language: zxx; text-decoration: underline }
 		a:visited { color: #800000; so-language: zxx; text-decoration: underline }
 	</style>
@@ -87,14 +87,15 @@ rarely. Results are shown below:</p>
 
 </p>
 <p style="margin-bottom: 0in">Here, we are definitely hitting the
-point where some “buckets” only have 1 sample in them, which
-occurs whenever the green line touches the black line. Given enough
-time, one could increase the number of trials beyond 1.6e14 if
+point where some “buckets” in green only have 1 sample in them,
+which occurs whenever a green dot is on the black line. Given enough
+time, the number of trials could be increased beyond 1.6e14 if
 desired. There is also a bit of undulation near 6.3 sigma. This is
 where the original 32-bit PRNG is used, before transitioning to
-64-bit. One could push this back a bit to remove this if desired.
-Overall, the 14.7 Gsamp/sec is almost 3x faster than the 5.3
-Gsamp/sec observed for the MKL function.</p>
+64-bit. This could be alleviated by setting the threshold (currently
+less than 8) to a higher number for using 64-bit integers. Overall,
+the 14.7 Gsamp/sec is almost 3x faster than the 5.3 Gsamp/sec
+observed for the MKL function.</p>
 <p style="margin-bottom: 0in">The end result is fast generation of
 WGN samples with a very high maximum sigma.</p>
 <p style="margin-bottom: 0in"><br/>
