@@ -40,7 +40,7 @@ void encode_matrix_allocate (const char *filename, struct Henc_struct *H, unsign
     H->par_offset = (uint32_t *)malloc(sizeof(int32_t)*sum_cnt);
     fread_return = fread(H->par_offset,sizeof(int32_t),sum_cnt,fp);
     fclose(fp);
-	printf("Matrix Params: Z=%d  Hcol=%d  Hrow=%d num_par_cw=%d\n",H->z_value,H->mcol,H->mrow,H->num_par_cw);
+	//printf("Matrix Params: Z=%d  Hcol=%d  Hrow=%d num_par_cw=%d\n",H->z_value,H->mcol,H->mrow,H->num_par_cw);
 
 	//allocate memory
 	H->cw_bits   = (ENC_CLASS *)_mm_malloc( num_cw*H->mcol*sizeof(ENC_CLASS),sizeof(ENC_CLASS) );
