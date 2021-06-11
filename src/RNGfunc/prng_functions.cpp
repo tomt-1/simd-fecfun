@@ -30,7 +30,7 @@ void init_randstate(uint64_t *inp) {
 //Vec4uq => running 4 64b generators in parallel
 
 //4 parallel PRNGs using sfc64
-inline Vec4uq rand_sfc64_N(int rand_sel) {
+Vec4uq rand_sfc64_N(int rand_sel) {
 	Vec4uq *sl = s+rand_sel*4;
 	Vec4uq temp = sl[0] + sl[1] + sl[3];
 	sl[3] = sl[3] + 1;
@@ -41,7 +41,7 @@ inline Vec4uq rand_sfc64_N(int rand_sel) {
 }
 
 //4 parallel PRNGs using xoshiro256++
-inline Vec4uq rand_xoshiro_N(int rand_sel) {
+Vec4uq rand_xoshiro_N(int rand_sel) {
 	Vec4uq *sl = s+rand_sel*4;
 	Vec4uq a = sl[0] + sl[3];
 	Vec4uq b = (a << 23);

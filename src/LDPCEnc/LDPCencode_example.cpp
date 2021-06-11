@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "vectorclass.h"
 
@@ -7,11 +8,6 @@
 #define ENC_SIZE 256
 
 #include "enc_struct_LDPC.h"
-
-//unsigned rdtsc_start_high, rdtsc_start_low, rdtsc_stop_high, rdtsc_stop_low;
-//uint64_t rdtsc_counts[10];
-//unsigned rdtsc_idx = 0;
-//#include "timing_macro.h"
 
 //function prototypes
 void encode_matrix_allocate( const char *, struct Henc_struct*, unsigned );
@@ -33,7 +29,11 @@ int main() {
 		char dummy;
 		for (unsigned col=0; col<(H.mcol-H.mrow); ++col) {
 			int fread_return = fread(linedata,sizeof(char),H.z_value,stdin);
-			fread(&dummy,sizeof(char),1,stdin); //skip LF (probably need to skip 2 if Windoze)
+			fread_return += fread(&dummy,sizeof(char),1,stdin); //skip LF (probably need to skip 2 if Windoze)
+			if ( fread_return != ((int)H.z_value+1) ) {
+				fprintf(stderr,"Error reading data bits from stdin\n");
+				exit(1);
+			}
 			char *lineptr = linedata;
 			for (unsigned bytecnt=0; bytecnt < ENC_SIZE/8; ++bytecnt) {
 				cw_data[bytecnt] = 0;

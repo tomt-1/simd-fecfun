@@ -1,0 +1,10 @@
+g++ -march=native -O3 -Wall -std=c++17 -I/home/tatetzla/AgnerFog/version2-master -I../include -c ../src/LDPCEnc/LDPCencode.cpp -o tmp/LDPCencode.o
+g++ -march=native -O3 -Wall -std=c++17 -I/home/tatetzla/AgnerFog/version2-master -I../include -c ../src/LDPCEnc/LDPCencode_example.cpp -o tmp/LDPCencode_example.o
+g++ -march=native -O3 -Wall -std=c++17 -I/home/tatetzla/AgnerFog/version2-master -I../include -c ../src/LDPCEnc/encode_matrix_allocate.cpp -o tmp/encode_matrix_allocate.o
+
+g++ -march=native -O3 -Wall tmp/LDPCencode.o tmp/encode_matrix_allocate.o tmp/LDPCencode_example.o -o LDPCencode_example
+
+if [ "$USEOCT" == "1" ]
+	then octave --eval LDPCenc_test
+	else matlab -batch LDPCenc_test
+fi

@@ -21,12 +21,16 @@ void encode_matrix_allocate (const char *filename, struct Henc_struct *H, unsign
 
 	//read the Encode Matrix data
 	fp = fopen(filename,"r");
+	if ( fp == NULL ) {
+		fprintf(stderr,"Cannot open file %s for reading\n",filename);
+		exit(1);
+	}
     fread_return  = fread(&(H->z_value),sizeof(int32_t),1,fp);
 	fread_return += fread(&(H->num_par_cw),sizeof(int32_t),1,fp);
     fread_return += fread(&(H->mrow),sizeof(int32_t),1,fp);
     fread_return += fread(&(H->mcol),sizeof(int32_t),1,fp);
     if ( fread_return != 4 ) {
-        printf("Error in fread mrow or mcol\n");
+        fprintf(stderr,"Error in fread mrow or mcol\n");
         exit(1);
     }
     H->par_cnts = (uint32_t *)malloc(sizeof(int32_t)*H->mrow);
@@ -40,7 +44,7 @@ void encode_matrix_allocate (const char *filename, struct Henc_struct *H, unsign
     H->par_offset = (uint32_t *)malloc(sizeof(int32_t)*sum_cnt);
     fread_return = fread(H->par_offset,sizeof(int32_t),sum_cnt,fp);
     fclose(fp);
-	//printf("Matrix Params: Z=%d  Hcol=%d  Hrow=%d num_par_cw=%d\n",H->z_value,H->mcol,H->mrow,H->num_par_cw);
+	printf("Matrix Params: Z=%d  Hcol=%d  Hrow=%d num_par_cw=%d\n",H->z_value,H->mcol,H->mrow,H->num_par_cw);
 
 	//allocate memory
 	H->cw_bits   = (ENC_CLASS *)_mm_malloc( num_cw*H->mcol*sizeof(ENC_CLASS),sizeof(ENC_CLASS) );
