@@ -64,5 +64,5 @@ fwrite(fs,[row_weights row_active_cols-1 row_offset f2b_copy_cnt f2b_cols-1 f2b_
 		   b2f_copy_cnt b2f_cols-1 b2f_offsets],'int32');
 fclose(fs);
 total_f2b_b2f = sum(f2b_copy_cnt) + sum(b2f_copy_cnt);
-fprintf('total f2b+b2f elements: %d\n',total_f2b_b2f);
+%fprintf('total f2b+b2f elements: %d\n',total_f2b_b2f);
 

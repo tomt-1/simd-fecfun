@@ -25,8 +25,6 @@ else
 	CXXFLAG1 = -O3 -Wall -std=c++17 $(ARCHFLAG)
 endif
 
-VECINC = /home/tatetzla/AgnerFog/version2-master
-
 ifeq ($(MINSUM),1)
 	PRODMIN_OBJ = all_min_generated.o
 	SVML_OPT = 
