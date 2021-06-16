@@ -1,0 +1,6 @@
+./run_LDPCsim.pl "MatrixSet=::16e 1/2::" z_over=96 exec=LDPCtop_Vec16f_prod mainid=z96 num_codeword=10 SNR_start=-2 SNR_end=0 num_par=2
+./run_LDPCsim.pl "MatrixSet=::16e 1/2::" z_over=48 exec=LDPCtop_Vec16f_prod mainid=z48 num_codeword=10 SNR_start=-1.75 SNR_end=1.25 num_par=2
+./run_LDPCsim.pl "MatrixSet=::16e 1/2::" z_over=24 exec=LDPCtop_Vec16f_prod mainid=z24 num_codeword=10 SNR_start=-1.5 SNR_end=2.0 num_par=2
+#from octave or matlab command line, get plot by running:
+#linestyles;ldpc_stats
+#title('16e rate 1/2, sum-product, layered, 10 iteration');

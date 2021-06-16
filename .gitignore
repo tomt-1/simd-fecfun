@@ -1,32 +1,14 @@
-# Prerequisites
-*.d
+# generated cpp files
+all_min_generated.cpp
+all_prod_generated.cpp
+
+# build tmp files and executable names
+build/tmp
+build/LDPCtop_Vec*
+build/LDPC*.dat
 
 # Compiled Object files
 *.slo
 *.lo
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app

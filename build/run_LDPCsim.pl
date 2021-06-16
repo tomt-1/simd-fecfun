@@ -17,29 +17,19 @@ $gen_dat_flag = 1; #generate encode and decode .dat files (else use existing one
 
 ($num_proc) = `grep processor /proc/cpuinfo | tail -1` =~ /: (\d+)/;
 ++$num_proc;  #default number of processes for decoding
-$num_proc = 1; #override for now.  Remove this later
 
 #@min_fer  = (1e5, 1000, 20);
 #@time_fer = (30, 10*60, 24*3600); #last time is max wall clock - exit after report exceeding this
 
-$outer_count = 10; #reports made on each outer iteration
-$inner_count = 100; #number of times each block of "num_codeword" is decoded
-$num_codeword = 100; #These are "super" codewords including parallelism in one chunk of memory
+$outer_count  = 10; #reports made on each outer iteration
+$inner_count  = 200; #number of times each block of "num_codeword" is decoded
+$num_codeword = 500; #These are "super" codewords including parallelism in one chunk of memory
 $max_iter = 10; #50;
 
-#max_row_metric is max 1-tanh value if using sum-product
-#6e-8 if float, 1e-16 if double (corresponds to ~18/2 or ~38/2 as tanh argument)
-if ($exec =~ /_prod/) {
-	$max_row_metric = ($exec =~ /f_prod/) ? 6e-8 : 1e-16;
-	$max_abs_LLR = 1e9;
-	$LLR_scaling_factor = 1.0;
-	$beta_offset = 0.0;
-} else {
-	$max_row_metric = 31;
-	$max_abs_LLR = 24;
-	$LLR_scaling_factor = 2.0;
-	$beta_offset = 1.0;
-}
+$max_row_metric = 31;
+$max_abs_LLR = 24;
+$LLR_scaling_factor = 2.0;
+$beta_offset = 1.0;
 
 $puncture_8023ca_flag = 0;
 $use_given_rand_state = 0;
@@ -50,7 +40,7 @@ $SNR_step  =  0.25;
 $enc_raw_file = "LDPCencode.raw.dat"; #could rename this file after 1st time, put new name here, and set gen_dat_flag=0
 $dec_raw_file = "LDPCdecode.raw.dat";
 
-$save_stats  = 1;  #TBD: save stats to an Octave file
+$save_stats  = 1;  #save stats to an Octave file
 $mainid = 'm11ad12';  #some prefix for variables in Octave file
 #grabbing TSC frequency this way is likely not robust.
 @tsc_time = `dmesg | grep "tsc: Detected"`; #grabs first line, with "processor"
@@ -61,6 +51,24 @@ while ($_ = shift) {
 	eval("\$$_");	#blindly evaluating arg - use with caution
 }
 
+#default metrics for floating point (unless overridden)
+#if manually setting, must set all of max_row_metric, max_abs_LLR, LLR_scaling_factor, and beta_offset
+if ( ($exec =~ /_prod/) && ($max_row_metric == 31) ) { 
+	#max_row_metric is max 1-tanh value if using sum-product
+	#6e-8 if float, 1e-16 if double (corresponds to ~18/2 or ~38/2 as tanh argument)
+	$max_row_metric = ($exec =~ /f_prod/) ? 6e-8 : 1e-16;
+	$max_abs_LLR = 1e9;
+	$LLR_scaling_factor = 1.0;
+	$beta_offset = 0.0;
+}
+#compute simd_size and elem_size based on exec name
+%elem_tab = ('c',8,'s',16,'w',32,'q',64,'f',32,'d',64);
+($simd_par,$echar) = $exec =~ /Vec(\d+)([cswqfd])/;
+$elem_size = $elem_tab{$echar};
+$simd_size = $simd_par * $elem_size;
+$simd_size = $simd_size_over if defined $simd_size_over;  #override simd_size
+$elem_size = $elem_size_over if defined $elem_size_over; #override elem_size
+print "Key Parameters: MatrixSet=\"$MatrixSet\" num_par=$num_par Decoder=$exec simd_size=$simd_size elem_size=$elem_size num_proc=$num_proc num_codeword=$num_codeword\n\n";
 $target_loop_cnt = int( ($SNR_end-$SNR_start)/$SNR_step ) + 1;
 
 srand($rand_seed);
@@ -125,12 +133,17 @@ printf("\nPercent time all proc=%6.1f%%    Approx. Decode percentage=%5.1f%%\n",
 
 if ($save_stats) { #append/create to fixed name.  Could change in future
 	@cat = ('SNR','BER','iter','CWER','Dec_time','cwrate','inp_ber');
-	open(OCT,">> stat.m") || die;
+	open(OCT,">> ldpc_stat.m") || die;
 	print OCT "accum_stat = [",join(' ',@all_stats),"];\n";
 	for $i (0..6) {
 		print OCT "${mainid}_$cat[$i] = accum_stat($i+1:7:end);\n";
 	}
-	print OCT "semilogy(${mainid}_SNR,${mainid}_BER,'-.',${mainid}_SNR,${mainid}_CWER,'-');\n";
+	print OCT "add_label=1;\n";
+	print OCT "if exist('fig1')\nhold on;\nadd_label=0;\nlegend_str{end+1}='$mainid BER';\nlegend_str{end+1}='$mainid CWER';\nend\n";
+	print OCT "fig1 = semilogy(${mainid}_SNR,${mainid}_BER,ls_tab{ls_idx},${mainid}_SNR,${mainid}_CWER,ls_tab{ls_idx+1});\n";
+	print OCT "if (add_label)\nxlabel('SNR');\nylabel('BER/CWER');\ngrid on;\n";
+	print OCT "title('Bit and Codeword Error Rate vs SNR');\nlegend_str={'$mainid BER','$mainid CWER'};\nend\n";
+	print OCT "ls_idx = ls_idx+2; legend(legend_str);\n\n";
 }
 
 #parse line from decoder processes.  Uses global variables.
