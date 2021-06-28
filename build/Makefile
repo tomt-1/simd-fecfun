@@ -15,14 +15,12 @@ PROG_NAME = LDPCtop_Vec64c_min
 
 ifeq ($(DEBUG),1)
 	CXXFLAGS = -g -O0 -Wall -std=c++17 $(ARCHFLAG)
-	CXXFLAG1 = -g -O0 -Wall -std=c++17 $(ARCHFLAG)
-	CXXFLAG2 = -g -O0 -Wall -std=c++17 $(ARCHFLAG)
-	#CXXFLAG1 was for Top, only optimize up to -O1.  Now debugged
-	#CXXFLAG2 was for fastlog, only optimize up to -O2.  Now debugged
+	CXXFLAGD = -g -O0 -Wall -std=c++17 $(ARCHFLAG)
 else
+	#-flto, -ffast-math: no benefit.  -funroll-loops on Decoder gives 3.6% speed improvement
+	#CXXFLAGD is for the decoder 
 	CXXFLAGS = -O3 -Wall -std=c++17 $(ARCHFLAG)
-	CXXFLAG2 = -O3 -Wall -std=c++17 $(ARCHFLAG)
-	CXXFLAG1 = -O3 -Wall -std=c++17 $(ARCHFLAG)
+	CXXFLAGD = -O3 -funroll-loops -Wall -std=c++17 $(ARCHFLAG)
 endif
 
 ifeq ($(MINSUM),1)
@@ -51,10 +49,10 @@ all: $(PROG_NAME)
 	cd ../../src/LDPCDec && ./min_find_wrap.pl prod > all_prod_generated.cpp && cd ../../build/tmp
 
 $(DOBJ) : %.o : ../../src/LDPCDec/%.cpp
-	$(CXX) $(CXXFLAGS) -I$(VECINC) -I../../include -DSIMD_PAR=$(SIMD_PAR) -DSIMD_ELEM_BW=$(SIMD_ELEM) -c $< -o $@
+	$(CXX) $(CXXFLAGD) -I$(VECINC) -I../../include -DSIMD_PAR=$(SIMD_PAR) -DSIMD_ELEM_BW=$(SIMD_ELEM) -c $< -o $@
 
 prng_functions.o : ../../src/RNGfunc/prng_functions.cpp
-	$(CXX) $(CXXFLAG2) -mrdrnd -I$(VECINC) -DSIMD_F=Vec8f -DSIMD_I=Vec8i -DSIMD_RAND=Vec4uq -c $< -o $@
+	$(CXX) $(CXXFLAGS) -mrdrnd -I$(VECINC) -DSIMD_F=Vec8f -DSIMD_I=Vec8i -DSIMD_RAND=Vec4uq -c $< -o $@
 
 $(EOBJ) : %.o : ../../src/LDPCEnc/%.cpp
 	$(CXX) $(CXXFLAGS) -I$(VECINC) -I../../include -c $< -o $@
@@ -70,7 +68,7 @@ gen_metrics.o : ../../src/Top/gen_metrics.cpp
 	$(CXX) $(CXXFLAGS) -I$(VECINC) -I../../include -DSIMD_PAR=$(SIMD_PAR) -DSIMD_ELEM_BW=$(SIMD_ELEM) -c $< -o $@
 
 $(TOBJ) : %.o : ../../src/Top/%.cpp
-	$(CXX) $(CXXFLAG1) -mrdrnd -I$(VECINC) -I../../include -DSIMD_PAR=$(SIMD_PAR) -DSIMD_ELEM_BW=$(SIMD_ELEM) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -mrdrnd -I$(VECINC) -I../../include -DSIMD_PAR=$(SIMD_PAR) -DSIMD_ELEM_BW=$(SIMD_ELEM) -c $< -o $@
 
 
 $(PROG_NAME): $(DOBJ) prng_functions.o $(EOBJ) gen_rand_data_bits.o read_sim_params.o gen_metrics.o $(TOBJ)

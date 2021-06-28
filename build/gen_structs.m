@@ -21,6 +21,10 @@ if ( ~exist('elem_size','var') )
     elem_size = 32;     %SIMD element (or component) size in bits
 end
 
+if ( exist('OCTAVE_VERSION', 'builtin') )
+	warning('off','Octave:data-file-in-path')
+end
+
 Hc = GetHMatrix(MatrixSet);
 [direct_cols subst_row subst_col inv_method inv_filename z_value] = encode_method(MatrixSet);
 z_value = z_value * num_par;
