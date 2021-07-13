@@ -156,8 +156,8 @@ sub parse_line {
 	if ( /^Matrix Params/ ) {
 		($Z,$Hcol,$Hrow,$num_par_cw) = m/Z=(\d+)  Hcol=(\d+)  Hrow=(\d+) num_par_cw=(\d+)/;
 		$cw_per_loop = $super_cw_per_loop * $num_par_cw;
-		$bit_per_cw = $Z * $Hcol;
-		$data_bit_per_cw = $Z * ($Hcol - $Hrow);
+		$bit_per_scw = $Z * $Hcol;
+		$data_bit_per_scw = $Z * ($Hcol - $Hrow);
 	}
 	if ( /^loop/ ) {
 		@vals = m/SNR=(\S+)\s+inp_bit_err=(\S+)\s+tot_iter=(\S+)\s+tot_bit_err=(\S+)\s+tot_cw_err=(\S+)\s+tot_dec_ticks=(\S+)/;
@@ -184,9 +184,10 @@ sub print_stats {
 		@cw_rate_save = ();
 	}
 	foreach $snr (sort { $a <=> $b } keys %in_be_tot) {
-		$tot_out_ber = $out_be_tot{$snr} / ($tot_cw{$snr} * $data_bit_per_cw);
-		$tot_in_ber = $in_be_tot{$snr} / ($tot_cw{$snr}*$bit_per_cw);
-		$ave_iter = $iter_tot{$snr} * $num_par / $tot_cw{$snr};
+		$tot_scw = $tot_cw{$snr}/$num_par; #total "super" codewords (includes num_par)
+		$tot_out_ber = $out_be_tot{$snr} / ($tot_scw * $data_bit_per_scw);
+		$tot_in_ber = $in_be_tot{$snr} / ($tot_scw * $bit_per_scw);
+		$ave_iter = $iter_tot{$snr} / $tot_scw;
 		$tot_cw_er = $cw_err_tot{$snr} / $tot_cw{$snr};
 		$dec_time = $tot_ticks{$snr} / ($num_proc * $tick_freq * 1e6);
 		if ( $cw_rate_flag ) {
