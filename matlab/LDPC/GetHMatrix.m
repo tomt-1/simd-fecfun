@@ -8,6 +8,7 @@ function [H Z] = GetHMatrix(MatrixSet);
 %further processing may be necessary (e.g. modulo by Z for Wimax/16e)
 %MatrixSet can be: 
 %    '11ad 1/2','11ad 5/8','11ad 3/4', '11ad 13/16',
+%    '11ay 1/2','11ay 5/8','11ay 3/4', '11ay 13/16', '11ay 7/8',
 %    '16e 1/2','16e 2/3A', '16e 2/3B', '16e 3/4A', '16e 3/4B', '16e 5/6',
 %    '11n 1/2 z27', '11n 2/3 z27', '11n 3/4 z27', '11n 5/6 z27',
 %    '11n 1/2 z54', '11n 2/3 z54', '11n 3/4 z54', '11n 5/6 z54',
@@ -18,6 +19,8 @@ function [H Z] = GetHMatrix(MatrixSet);
 % For 16e standards, Z can be any multiple of 4 from 24 to 96
 % this function will just return 96 for this case
 % For 11n standards, the MatrixSet determines which Z is used
+% For 11ay, the codeword length is 1344.
+%     The 672-sized 7/8-rate 'superimpose' mode matrix is not supported
 
 switch MatrixSet
 	case '11ad 1/2'
