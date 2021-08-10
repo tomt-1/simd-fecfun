@@ -2,14 +2,13 @@
 
 This is a set of functions for forward error correction (FEC).  The code uses Agner Fog's vector class library (https://github.com/vectorclass - at a minimum get the "version2-master" files).  Currently, only LDPC is supported.
 
-This is a work-in-progess, for a more polished FEC project, one might want to look at aff3ct (https://github.com/aff3ct/aff3ct).  The key difference is that simd-fecfun will hit higher throughputs and lower latencies for decoding.
-
+While this is a work-in-progress, the LDPC decoding is fairly complete.  The LDPC decoder throughput can exceed 90 million codewords per second (802.11ad 1/2 rate on a dual-socket Ice Lake server).
 
 ## Key Components
 
 1. [WGN generation](https://tomt-1.github.io/simd-fecfun/WGN/norm.dist.methods.html)
-2. LDPC Encoding (TBD)
-3. LDPC Decoding (TBD) 
+2. LDPC Encoding (Documentation TBD)
+3. LDPC Decoding (Documentation TBD) 
 
 
 ## Prerequisites
@@ -64,6 +63,18 @@ The graph should look something like this:
 
 ![802.16e rate 1/2 varying Z](./z_80216e_12.svg)
 
+## Supported LDPC options
+
+The quasi-cyclic matrices supported by the LDPC script run_LDPCsim.pl (through the "MatrixSet" parameter) are:
+'11ad 1/2','11ad 5/8','11ad 3/4', '11ad 13/16',
+'11ay 1/2','11ay 5/8','11ay 3/4', '11ay 13/16', '11ay 7/8',
+'16e 1/2','16e 2/3A', '16e 2/3B', '16e 3/4A', '16e 3/4B', '16e 5/6',
+'11n 1/2 z27', '11n 2/3 z27', '11n 3/4 z27', '11n 5/6 z27',
+'11n 1/2 z54', '11n 2/3 z54', '11n 3/4 z54', '11n 5/6 z54',
+'11n 1/2 z81', '11n 2/3 z81', '11n 3/4 z81', '11n 5/6 z81',
+'ITU G.hn 1/2 z14'
+
+Additional parity matrices can be manually added to the GetHMatrix.m and encode_method.m files
 
 ## License
 
