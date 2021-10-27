@@ -393,7 +393,23 @@ H = [
 H = transpose(H); %above is transposed, but in form as listed in spec
 
 	otherwise
-display 'invalid MatrixSet argument';
-Z = 0;
-H = [];
+	if ( MatrixSet(1:8) == "5GNR_Hbg" )
+		%assume the correct format -- no robust error checking here
+		tmp = regexp(MatrixSet,'Hbg(\d)_Z(\d+)_Rowblk(\d+)','tokens');
+		Hbg_idx = str2double(tmp{1}{1});
+		Z = str2double(tmp{1}{2});
+		Rowblk = str2double(tmp{1}{3});
+		Zbase = Z;
+		while ( (Zbase/2) == floor(Zbase/2) )
+			Zbase = Zbase/2;
+		end
+		Zbase = (Zbase+1)/2;  %map 1,3,5,6,9,11,13,15 to index values 1 through 8
+		H = Hbg_matrix(Hbg_idx, Zbase);
+		rc_remove = size(H,1) - Rowblk;
+		H = H(1:size(H,1)-rc_remove,1:size(H,2)-rc_remove);
+	else
+		display 'invalid MatrixSet argument';
+		Z = 0;
+		H = [];
+	end
 end

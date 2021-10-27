@@ -20,7 +20,7 @@ elseif (inv_method == 2)
     invM2 = (invM2gf == 1); %back to real numbers
     save('recent_invM2','invM2');
 else
-	invM2 = mod(inv(M2),2); %only works for simple M2
+	invM2 = mod(floor(inv(M2)+1e-12),2); %only works for simple M2
 end
 invM2tM1 = mod(invM2*M1,2);
 

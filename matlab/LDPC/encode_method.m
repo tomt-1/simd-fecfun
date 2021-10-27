@@ -182,6 +182,17 @@ switch MatrixSet
         z_value = 81;
 
 	otherwise
-		display 'invalid MatrixSet argument - Error';
+		if ( MatrixSet(1:8) == "5GNR_Hbg" )
+			tmp = regexp(MatrixSet,'Hbg(\d)_Z(\d+)_Rowblk(\d+)','tokens');
+			Hbg_idx = str2double(tmp{1}{1});
+			Z = str2double(tmp{1}{2});
+			Rowblk = str2double(tmp{1}{3});
+			direct_cols = [1 3];
+			subst_row = [2 4 (5:Rowblk)];
+			subst_col = [2 4 (5:Rowblk)];
+			z_value = Z;
+		else
+			display 'invalid MatrixSet argument - Error';
+		end
 
 end
