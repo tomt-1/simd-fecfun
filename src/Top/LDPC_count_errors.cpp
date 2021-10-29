@@ -20,13 +20,18 @@
 	#define DB_TYPE uint64_t
 #endif
 
-//1s every Nth bit, for N=1 to 9.  Where N is number of codewords in parallel in H matrix
-static const uint64_t par_cw_mask[10] = {
-	0x0, 0xffff'ffff'ffff'ffff, 0x5555'5555'5555'5555,
+//1s every Nth bit, for N=1 to 16.  Where N is number of codewords in parallel in H matrix
+static const uint64_t par_cw_mask[17] = {
+	0x0, 
+	0xffff'ffff'ffff'ffff, 0x5555'5555'5555'5555,
 	0x9249'2492'4924'9249, 0x1111'1111'1111'1111,
 	0x1084'2108'4210'8421, 0x1041'0410'4104'1041,
 	0x8102'0408'1020'4081, 0x0101'0101'0101'0101,
-	0x8040'2010'0804'0201 };
+	0x8040'2010'0804'0201, 0x1004'0100'4010'0401,
+	0x0080'1002'0040'0801, 0x1001'0010'0100'1001,
+	0x0010'0080'0400'2001, 0x0100'0400'1000'4001,
+	0x1000'2000'4000'8001, 0x0001'0001'0001'0001
+	};
 
 void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct Hdec_struct *Hdec,
 	unsigned *tot_cw_err, unsigned *tot_bit_err ) { //for now, ignoring iter_cnts: unsigned *iter_cnts ) {
