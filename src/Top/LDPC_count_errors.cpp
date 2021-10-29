@@ -20,8 +20,11 @@
 	#define DB_TYPE uint64_t
 #endif
 
+//maximum num_par_cw allowed
+#define MAX_PAR_CW 16
+
 //1s every Nth bit, for N=1 to 16.  Where N is number of codewords in parallel in H matrix
-static const uint64_t par_cw_mask[17] = {
+static const uint64_t par_cw_mask[MAX_PAR_CW+1] = {
 	0x0, 
 	0xffff'ffff'ffff'ffff, 0x5555'5555'5555'5555,
 	0x9249'2492'4924'9249, 0x1111'1111'1111'1111,
@@ -62,7 +65,7 @@ void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct 
 	//get error counts over all codwords
 	for (unsigned cw=0; cw < num_codeword; ++cw) {
 		unsigned cw_bit_errors = 0;
-		unsigned cw_err_cnt_by_slot[10] = {0};
+		unsigned cw_err_cnt_by_slot[MAX_PAR_CW] = {0};
 		
 		//compress signs of decoded codeword data (not parity) to bits
 		DB_TYPE dec_local_store[32*2]; //room for 2 256b words if 8b metrics.  More than enough for others
