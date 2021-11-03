@@ -5,7 +5,8 @@
 #include "simd_defs.h"
 
 #include "../../src/LDPCDec/dec_struct_LDPC.h"
-#define ENC_CLASS Vec4uq
+
+#include "enc_defs.h"
 #include "../../src/LDPCEnc/enc_struct_LDPC.h"
 
 
@@ -41,25 +42,25 @@ void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct 
 
 	unsigned simd_per_z = (Hdec->z_value+SIMD_PAR-1) / SIMD_PAR;
 	SIMD_CLASS *dec_ptr = Hdec->decoded_metrics + 1;
-	Vec4uq *enc_data = Henc->cw_bits;
-	Vec4uq z_bitmask;	//identical to z_bitmask calculated in LDPCencode - perhaps add to Henc
+	ENC_CLASS *enc_data = Henc->cw_bits;
+	ENC_CLASS z_bitmask;	//identical to z_bitmask calculated in LDPCencode - perhaps add to Henc
 	DB_TYPE *dec_local_ptr;
-	Vec4uq dec_local[2]; //adding an extra word in case any write can go past 1st (might remove)
+	ENC_CLASS dec_local[2]; //adding an extra word in case any write can go past 1st (might remove)
 	unsigned cw_with_error = 0;
 	unsigned local_tot_bit_errors = 0;
 	unsigned num_par_cw = Henc->num_par_cw;
 
 	//assign z_bitmask
 	//due to pointer aliasing, memcopy z_mask_ptr results to z_bitmask.
-	uint64_t zmask_ptr[4];
+	uint64_t zmask_ptr[ENC_BW/64];
 	//uint64_t *zmask_ptr = (uint64_t *)&z_bitmask;
 	int z_val_copy = Henc->z_value;
-	for (int i=0; i<4; ++i) {	//assumes 256b SIMD words 4*64=256
+	for (int i=0; i<(ENC_BW/64); ++i) {	
 		int shift_val = (z_val_copy >= 64) ? 0 : (64 - z_val_copy);
 		zmask_ptr[i]  = (z_val_copy ==  0) ? 0 : 0xffff'ffff'ffff'ffff >> shift_val;
 		z_val_copy    = (z_val_copy >= 64) ? z_val_copy - 64 : 0;
 	}
-	memcpy(&z_bitmask,zmask_ptr,4*sizeof(uint64_t));
+	memcpy(&z_bitmask,zmask_ptr,(ENC_BW/64)*sizeof(uint64_t));
 	const uint64_t par_mask = par_cw_mask[num_par_cw];
 
 	//get error counts over all codwords
@@ -68,11 +69,12 @@ void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct 
 		unsigned cw_err_cnt_by_slot[MAX_PAR_CW] = {0};
 		
 		//compress signs of decoded codeword data (not parity) to bits
-		DB_TYPE dec_local_store[32*2]; //room for 2 256b words if 8b metrics.  More than enough for others
+		DB_TYPE dec_local_store[(ENC_BW/8)*2]; //room for 2 256b or 512b words if 8b metrics.  More than enough for others
 		for (unsigned col=0; col < (Hdec->mcol - Hdec->mrow); ++col) {
 			dec_local_ptr = dec_local_store;
 			//dec_local_ptr = (DB_TYPE *)dec_local;
 			unsigned cw_col_errors = 0;
+			// SIMD_PAR == 4 if double prec and 256b => only 4 decoded bits per vector
 			#if ( SIMD_PAR == 4 )
 				DB_TYPE prev_dec_bits = 0;
 			#endif
@@ -96,14 +98,14 @@ void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct 
 			dec_ptr += 2;	//skip the extra SIMD words in each major col
 			//compare to original codeword data (assumes Z <= 256)
 			//avoid pointer aliasing
-			memcpy(dec_local,dec_local_store,sizeof(Vec4uq));
-			Vec4uq diff_tmp1 = *enc_data ^ dec_local[0];
-			Vec4uq diff = diff_tmp1 & z_bitmask;
+			memcpy(dec_local,dec_local_store,sizeof(ENC_CLASS));
+			ENC_CLASS diff_tmp1 = *enc_data ^ dec_local[0];
+			ENC_CLASS diff = diff_tmp1 & z_bitmask;
 			++enc_data;
-			uint64_t diff_64ptr[4];
+			uint64_t diff_64ptr[ENC_BW/64];
 			//use memcpy to avoid illegal pointer aliasing.  Should optimize away
-			memcpy(diff_64ptr,&diff,4*sizeof(uint64_t));
-			for (unsigned i=0; i<4; ++i) {
+			memcpy(diff_64ptr,&diff,(ENC_BW/64)*sizeof(uint64_t));
+			for (unsigned i=0; i<(ENC_BW/64); ++i) {
 				uint64_t mask_shift = par_mask;
 				cw_col_errors += _popcnt64( diff_64ptr[i] );
 				for (unsigned par=0; par < num_par_cw; ++par) {
@@ -112,8 +114,6 @@ void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct 
 					unsigned cw_slot = (i*64+par) % num_par_cw;
 					cw_err_cnt_by_slot[cw_slot] += err_cnt;
 					mask_shift = (mask_shift << 1);
-				}
-				if ( num_par_cw > 1 ) {
 				}
 			}
 			cw_bit_errors += cw_col_errors;

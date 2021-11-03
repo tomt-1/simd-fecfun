@@ -2,9 +2,7 @@
 #include "vectorclass_extensions.h"
 
 //ENC_CLASS uses 256b vectors.  Might add support for 512b (Vec8uq) in the future
-#ifndef ENC_CLASS
-#define ENC_CLASS Vec4uq
-#endif
+#include "enc_defs.h"
 
 #include "enc_struct_LDPC.h"
 
@@ -55,11 +53,11 @@ void LDPCencode( const int num_codewords, struct Henc_struct H )
 	z.zmod8 = H.z_value & 7;
 	z.zmod8_rev = (8-z.zmod8) & 7;
 	z.byte_offset = (H.z_value >> 3);
-	z.byte_offset_rev = (256-H.z_value) >> 3;
+	z.byte_offset_rev = (ENC_BW-H.z_value) >> 3;
 
 	uint64_t *zmask_ptr = (uint64_t *)&z.z_bitmask;
 	int z_val_copy = H.z_value;
-	for (int i=0; i<4; ++i) {  //assumes 256b SIMD words 4*64=256
+	for (int i=0; i < (ENC_BW/64); ++i) {  //Num of 64b words: 4 if 256b ENC_BW, 8 if 256b ENC_BW
 		int shift_val = (z_val_copy >= 64) ? 0 : (64 - z_val_copy);
 		zmask_ptr[i]  = (z_val_copy ==  0) ? 0 : 0xffff'ffff'ffff'ffff >> shift_val;
 		z_val_copy    = (z_val_copy >= 64) ? z_val_copy - 64 : 0;
@@ -108,9 +106,9 @@ void copy_rotations( ENC_CLASS inp_data, struct z_param_st z, ENC_CLASS *prework
 	prework[1] = curr_cw_ldata;
 	prework[16+0] = curr_cw_rdata;
 	for (int rot=1; rot<8; ++rot) {
-		curr_cw_ldata = shift256_left1(curr_cw_ldata);
+		curr_cw_ldata = shift_left1(curr_cw_ldata);
 		curr_cw_ldata &= z.z_bitmask;
-		curr_cw_rdata = shift256_right1(curr_cw_rdata);
+		curr_cw_rdata = shift_right1(curr_cw_rdata);
 		prework[rot*2+1] = curr_cw_ldata;
 		prework[16+rot*2] = curr_cw_rdata;
 	}
@@ -125,15 +123,15 @@ void copy_rotations( ENC_CLASS inp_data, struct z_param_st z, ENC_CLASS *prework
 
 	for (int i=0; i<8; ++i) {
 		ENC_CLASS cw1,cw2;
-		cw1.load( sl_byteptr+sl_idx*2*32-sl_offset );
+		cw1.load( sl_byteptr+sl_idx*2*(ENC_BW/8)-sl_offset );
 		cw1 |= prework[16+i*2];
 		dest[i*2] = cw1;
 		--sl_idx;
 		sl_offset -= ((sl_idx & 7) == 7);
 		sl_idx = sl_idx & 7;
 
-		//note that for Z<=128, this is 0
-		cw2.load( sr_byteptr+sr_idx*2*32+sr_offset );
+		//note that for ENC_BW==256 and Z<=128, this is 0.  (Should also be 0 for 512 and Z<=256)
+		cw2.load( sr_byteptr+sr_idx*2*(ENC_BW/8)+sr_offset );
 		dest[i*2+1] = cw2;
 		++sr_idx;
 		sr_offset += (sr_idx == 8);

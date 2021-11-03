@@ -23,7 +23,7 @@ inline Vec4uq rot256_right1(const Vec4uq a) {
 }
 
 //shift left 1 (same as rot left, but lsb is zero)
-inline Vec4uq shift256_left1(const Vec4uq a) {
+inline Vec4uq shift_left1(const Vec4uq a) {
 	Vec4uq result,tmp1,tmp2;
 	tmp1 = (a << 1);
 	tmp2 = (a >> 63);
@@ -32,12 +32,32 @@ inline Vec4uq shift256_left1(const Vec4uq a) {
 	return result;
 }
 
+//shift left 1 for Vec8uq (change to template?)
+inline Vec8uq shift_left1(const Vec8uq a) {
+	Vec8uq result,tmp1,tmp2;
+	tmp1 = (a << 1);
+	tmp2 = (a >> 63);
+	tmp2 = permute8<-1,0,1,2,3,4,5,6>(tmp2);
+	result = tmp1 | tmp2;
+	return result;
+}
+
 //shift right 1 (same as rotate right, but msb is zero)
-inline Vec4uq shift256_right1(const Vec4uq a) {
+inline Vec4uq shift_right1(const Vec4uq a) {
 	Vec4uq result,tmp1,tmp2;
 	tmp1 = (a >> 1);
 	tmp2 = (a << 63);
 	tmp2 = permute4<1,2,3,-1>(tmp2);
+	result = tmp1 | tmp2;
+	return result;
+}
+
+//shift right 1 for Vec8uq
+inline Vec8uq shift_right1(const Vec8uq a) {
+	Vec8uq result,tmp1,tmp2;
+	tmp1 = (a >> 1);
+	tmp2 = (a << 63);
+	tmp2 = permute8<1,2,3,4,5,6,7,-1>(tmp2);
 	result = tmp1 | tmp2;
 	return result;
 }

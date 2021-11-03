@@ -4,10 +4,7 @@
 
 #include "vectorclass.h"
 
-#ifndef ENC_CLASS
-#define ENC_CLASS Vec4uq
-#endif
-
+#include "enc_defs.h"
 #include "enc_struct_LDPC.h"
 
 //load H matrix items for encode

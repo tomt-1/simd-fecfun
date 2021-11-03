@@ -1,6 +1,7 @@
 #include <math.h>
 #include "vectorclass.h"
 
+#include "enc_defs.h"
 #include "simd_defs.h"
 
 #define SIMD_F Vec8f
@@ -31,7 +32,7 @@ unsigned gen_metrics(unsigned num_codeword, float SNR, unsigned char *enc_cw_byt
 
 	int last_byte_iter = (z_value+7)/8;
 	int last_count = ((z_value-1) & 7) + 1;
-	int enc_col_offset = (256/8) - last_byte_iter;	//encode is always 256b SIMD.  Offset to next major col
+	int enc_col_offset = (ENC_BW/8) - last_byte_iter;	//encode is always 256b SIMD.  Offset to next major col
 	int dec_simd_per_z = (z_value+SIMD_PAR-1) / SIMD_PAR;  //ceiling function
 	int dec_col_offset = SIMD_PAR * dec_simd_per_z - 8*last_byte_iter;  //par*simd_per_z = total elements per major column stored
 	dec_col_offset += 2*SIMD_PAR; //and skip 2 additional SIMD words due to metric layout (empty SIMD word before and after each mcol)
