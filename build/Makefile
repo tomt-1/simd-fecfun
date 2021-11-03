@@ -59,7 +59,7 @@ $(EOBJ) : %.o : ../../src/LDPCEnc/%.cpp
 
 #always uses Vec4uq
 gen_rand_data_bits.o : ../../src/Top/gen_rand_databits.cpp
-	$(CXX) $(CXXFLAGS) -I$(VECINC) -I../../src/LDPCEnc -DSIMD_PAR=4 -DSIMD_ELEM_BW=64 -c $< -o $@
+	$(CXX) $(CXXFLAGS) -I$(VECINC) -I../../src/LDPCEnc -I../../include -DSIMD_PAR=4 -DSIMD_ELEM_BW=64 -c $< -o $@
 
 read_sim_params.o : ../../src/Top/read_sim_params.cpp
 	$(CXX) $(CXXFLAGS) -mrdrnd -c $< -o $@

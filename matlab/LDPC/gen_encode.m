@@ -2,6 +2,10 @@ function [H NumInfoBits invM2tM1] = gen_encode(Hc,z_value,num_par,inv_method,inv
 %create encode data for compiled function.  Return items so that
 %example test vectors can be created and checked
 
+%TODO: move simd_bw to an input of the function
+simd_bw = 512;
+byte_per_simd = simd_bw / 8;
+
 Hlog = 1.0*(Hc >= 0);   %H logical.  1=> submatrix is not ZxZ zero array
 [mrow mcol] = size(Hc);
 
@@ -37,7 +41,7 @@ for ii = 1:length(direct_cols)
 	offset = floor(shift_idx / 8);
 	mod8 = bitand(shift_idx,7);
 
-	wa_addr = col_nums*16*32 + mod8*2*32 + offset;
+	wa_addr = col_nums*16*byte_per_simd + mod8*2*byte_per_simd + offset;
 	%might want to sort the addrs to maximize cacheing
 	par_offset = [par_offset wa_addr];
 	col_cnts(ii) = length(wa_addr);
@@ -56,7 +60,7 @@ for r_idx=1:length(subst_row)
 	offset = floor(row_offset / 8);
 	mod8 = bitand(row_offset,7);
 
-	wa_addr = (tmp-1)*16*32 + mod8*2*32 + offset;
+	wa_addr = (tmp-1)*16*byte_per_simd + mod8*2*byte_per_simd + offset;
 	par_offset = [par_offset wa_addr];
 end
 
