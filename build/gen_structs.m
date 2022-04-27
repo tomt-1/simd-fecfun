@@ -25,8 +25,23 @@ if ( exist('OCTAVE_VERSION', 'builtin') )
 	warning('off','Octave:data-file-in-path')
 end
 
-Hc = GetHMatrix(MatrixSet);
+[Hc,Z_GetH,extra_5g] = GetHMatrix(MatrixSet);
 [direct_cols subst_row subst_col inv_method inv_filename z_value] = encode_method(MatrixSet);
+if ( MatrixSet(1:5) == "5GNR_" )
+	par_mcol = extra_5g(1);
+	punc_fill_lists = extra_5g(2:end);
+	%adjust for num_par >1
+	punc_fill_lists(3:2:end) = (punc_fill_lists(3:2:end)-1)*num_par+1;
+	punc_fill_lists(4:2:end) = punc_fill_lists(4:2:end)*num_par;
+	%and make indexing 0-based instead of 1-based
+	punc_fill_lists(3:end) = punc_fill_lists(3:end)-1;
+	subst_row = subst_row(1:par_mcol-2); %total parity mcol, minus the 2 in direct_col
+	subst_col = subst_col(1:par_mcol-2);
+	z_value = Z_GetH;  %Z is determined by GetHMatrix if 5GNR
+else
+	punc_fill_lists = [0 0];
+end
+
 z_value = z_value * num_par;
 Hc = Hc*num_par;
 Hc(Hc<0) = -1; %restore -1 values to -1
@@ -36,7 +51,7 @@ if (exist('z_over','var'))
 end
 
 %this will create the encoder structure file LDPCencode.raw.dat
-[H NumInfoBits invM2tM1] = gen_encode(Hc,z_value,num_par,inv_method,inv_filename,direct_cols,subst_row,subst_col);
+[H NumInfoBits invM2tM1] = gen_encode(Hc,z_value,num_par,inv_method,inv_filename,direct_cols,subst_row,subst_col,punc_fill_lists);
 
 bypass = 0; %1=> bypass re-ordering within major rows
 %derived params

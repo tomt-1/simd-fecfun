@@ -1,5 +1,5 @@
-function [H Z] = GetHMatrix(MatrixSet);
-%function [H Z] = GetHMatrix(MatrixSet);
+function [H Z extra_5g] = GetHMatrix(MatrixSet);
+%function [H Z extra_5g] = GetHMatrix(MatrixSet);
 %
 %returns the compressed H matrix for given MatrixSet string
 %as well as the value of Z
@@ -15,6 +15,7 @@ function [H Z] = GetHMatrix(MatrixSet);
 %    '11n 1/2 z81', '11n 2/3 z81', '11n 3/4 z81', '11n 5/6 z81',
 %    'ITU G.hn 1/2 z14',
 %    '802.3ca'
+%    '5GNR_n<#>_k<#>'  where <#> is number of bits in codeword and info bits respectively
 %
 % For 16e standards, Z can be any multiple of 4 from 24 to 96
 % this function will just return 96 for this case
@@ -22,6 +23,7 @@ function [H Z] = GetHMatrix(MatrixSet);
 % For 11ay, the codeword length is 1344.
 %     The 672-sized 7/8-rate 'superimpose' mode matrix is not supported
 
+extra_5g = []; %only used for '5GNR_...' MatrixSet
 switch MatrixSet
 	case '11ad 1/2'
 Z = 42;
@@ -393,20 +395,39 @@ H = [
 H = transpose(H); %above is transposed, but in form as listed in spec
 
 	otherwise
-	if ( MatrixSet(1:8) == "5GNR_Hbg" )
+	if ( MatrixSet(1:5) == "5GNR_" )
 		%assume the correct format -- no robust error checking here
-		tmp = regexp(MatrixSet,'Hbg(\d)_Z(\d+)_Rowblk(\d+)','tokens');
-		Hbg_idx = str2double(tmp{1}{1});
-		Z = str2double(tmp{1}{2});
-		Rowblk = str2double(tmp{1}{3});
-		Zbase = Z;
-		while ( (Zbase/2) == floor(Zbase/2) )
-			Zbase = Zbase/2;
+		tmp = regexp(MatrixSet,'5GNR_n(\d+)_k(\d+)','tokens');
+		n = str2double(tmp{1}{1});
+		k = str2double(tmp{1}{2});
+		[Hbg_idx, Z, lift_idx, k_mcol, start_punc_mcol] = Hbg_fill_puncture( n,k );
+		H = Hbg_matrix(Hbg_idx, lift_idx+1);
+		p_mcol = ceil( (n-k)/Z ) + start_punc_mcol;
+		info_mcol = k_mcol + start_punc_mcol;
+		H = H(1:p_mcol,1:(p_mcol+info_mcol));
+		%count of parity bits to puncture in last major column
+		punc_parity_cnt = Z*(p_mcol-start_punc_mcol) - (n-k);
+		if (start_punc_mcol > 0)
+			punc_idx = [1 start_punc_mcol*Z];
+		else
+			punc_idx = [];
 		end
-		Zbase = (Zbase+1)/2;  %map 1,3,5,6,9,11,13,15 to index values 1 through 8
-		H = Hbg_matrix(Hbg_idx, Zbase);
-		rc_remove = size(H,1) - Rowblk;
-		H = H(1:size(H,1)-rc_remove,1:size(H,2)-rc_remove);
+		if (punc_parity_cnt > 0)
+			punc_idx = [punc_idx Z*(p_mcol+info_mcol)+[-punc_parity_cnt+1 0]];
+		end	
+		%punc_idx = [(1:start_punc_mcol*Z) Z*(p_mcol+info_mcol)+(-punc_parity_cnt+1:0)];
+		fill_cnt = Z*info_mcol - k;
+		if (fill_cnt > 0)
+			fill_idx = Z*info_mcol+[-fill_cnt+1 0];
+		else
+			fill_idx = [];
+		end
+		%fill_idx = [Z*info_mcol+(-fill_cnt+1:0)];
+		fill_punc_lists = [length(punc_idx) length(fill_idx) punc_idx fill_idx];
+		%for each fill/punc pair, if using a "num_par", need:
+		%(start-1)*num_par+1 is 1st of each pair, end*num_par is 2nd of each pair
+		extra_5g = [p_mcol fill_punc_lists];
+		%extra_5g = [k_mcol, start_punc_mcol, p_mcol, info_mcol];
 	else
 		display 'invalid MatrixSet argument';
 		Z = 0;

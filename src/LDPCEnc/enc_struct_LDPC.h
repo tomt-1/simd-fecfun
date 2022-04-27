@@ -11,12 +11,18 @@
 
 struct Henc_struct {
 	uint32_t z_value;		//Z value for the pseudo-cyclic H matrix
+	uint32_t puncture_cnt;	//if >0, then punctured bit mask is used
+	uint32_t filler_cnt;	//if >0, then filler bit mask is used
 	uint32_t num_par_cw;    //number of interleaved sub-codewords in the defined H matrix
 	uint32_t mrow;			//Num of major rows in H matrix (rows in compressed Hc matrix)
 	uint32_t mcol;			//Num of major columns in H matrix/cols in Hc matrix
 	uint32_t *par_cnts;		//pointer to count-of-offsets for each parity column
 	uint32_t *par_colnum;	//pointer to parity column number being computed
 	uint32_t *par_offset;	//pointer to offsets used in computing parity
+	uint32_t *punc_list;	//pointer to list of start/end puncture indeces
+	uint32_t *fill_list;	//pointer to list of start/end filler indeces
 	ENC_CLASS *cw_bits;		//pointer to memory for all codeword bits (data+parity)
 	ENC_CLASS *work_area;	//pointer to work area used by LDPC encoder
+	ENC_CLASS *puncture_mask;	//mask of bits that are punctured (metric is zero)
+	ENC_CLASS *filler_mask;	//mask of bits that are filled (metric is max value)
 };

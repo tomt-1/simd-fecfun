@@ -22,6 +22,7 @@ void gen_rand_databits( unsigned num_codeword, struct Henc_struct *Henc ) {
 	}
 	ENC_CLASS *databuff = Henc->cw_bits;
 	for (unsigned cw=0; cw < num_codeword; ++cw) {
+		ENC_CLASS *filler_mask = Henc->filler_mask;
 		for (unsigned dcol=0; dcol < (Henc->mcol-Henc->mrow); ++dcol) {
 #if ENC_BW == 256
 			ENC_CLASS rand_dbits = rand_xoshiro_N(1);
@@ -31,6 +32,7 @@ void gen_rand_databits( unsigned num_codeword, struct Henc_struct *Henc ) {
 			ENC_CLASS rand_dbits(rand_dbits_256a,rand_dbits_256b);
 #endif
 			rand_dbits &= z_bitmask;
+			rand_dbits &= ~(*filler_mask++);
 			*databuff++ = rand_dbits;
 		}
 		databuff += Henc->mrow;

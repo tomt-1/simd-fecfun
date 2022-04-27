@@ -3,9 +3,7 @@
 #include "vectorclass.h"
 
 #define DEBUG 0
-//ENC_CLASS is Vec4uq (support for Vec8uq will be investigated if any need for Z>256)
-#define ENC_CLASS Vec4uq
-#define ENC_SIZE 256
+#define ENC_CLASS Vec8uq
 
 #include "../../src/LDPCEnc/enc_struct_LDPC.h"
 #include "simd_defs.h"
@@ -34,7 +32,7 @@ void gen_rand_databits( unsigned num_codeword, struct Henc_struct *Henc );
 void LDPCencode( const int num_codewords, struct Henc_struct H );
 unsigned gen_metrics(unsigned num_codeword, float SNR, unsigned char *enc_cw_byteptr, int z_value, int mcol,
     SIMD_F *wgn_fltptr, SIMD_CLASS *simd_metric_ptr, float LLR_scaling_factor, float max_abs_LLR,
-	int puncture_8023ca_flag);
+	ENC_CLASS *puncture_mask, ENC_CLASS *filler_mask);
 unsigned LDPCdecode_set( unsigned num_codeword, unsigned max_iter, float max_row_metric, 
 	float beta_offset, struct Hdec_struct *Hdec, min_fn_ptr_type *min_funcs );
 void LDPC_count_errors( unsigned num_codeword, struct Henc_struct *Henc, struct Hdec_struct *Hdec,
@@ -97,7 +95,7 @@ int main() {
 				unsigned tot_bit_err;
 				float SNR = SNRiter * Sim.SNR_step + Sim.SNR_start;
 				uncoded_err_cnt = gen_metrics( num_codeword, SNR, enc_cw_byteptr, Henc.z_value, Henc.mcol,
-					wgn_buff, simd_metric_ptr, Sim.LLR_scaling_factor, Sim.max_abs_LLR, Sim.puncture_8023ca_flag );
+					wgn_buff, simd_metric_ptr, Sim.LLR_scaling_factor, Sim.max_abs_LLR, Henc.puncture_mask, Henc.filler_mask);
 				//DEBUG: copy all starting metrics in first word to "start_simd_metric"
 				if ( DEBUG ) {
 					for (unsigned i=0; i < (64+2)*Henc.mcol; ++i) {

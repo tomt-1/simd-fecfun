@@ -16,7 +16,8 @@
 
 //return uncoded_err_cnt (might want to make it 64b)
 unsigned gen_metrics(unsigned num_codeword, float SNR, unsigned char *enc_cw_byteptr, int z_value, int mcol, 
-	SIMD_F *wgn_fltptr, SIMD_CLASS *simd_metric_ptr, float LLR_scaling_factor, float max_abs_LLR, int puncture_8023ca_flag) {
+	SIMD_F *wgn_fltptr, SIMD_CLASS *simd_metric_ptr, float LLR_scaling_factor, float max_abs_LLR, 
+	ENC_CLASS *puncture_mask, ENC_CLASS *filler_mask) {
 
 	//expand encoded bits to 8 float values of +1.0 (enc bit was 0) or -1.0 (enc bit was 1)
 	//scale WGN and add to this.  Get a count of sign changes (these are uncoded bit errors due to noise)
@@ -43,9 +44,11 @@ unsigned gen_metrics(unsigned num_codeword, float SNR, unsigned char *enc_cw_byt
 
 	for (unsigned cw=0; cw < num_codeword; ++cw) {
 		for (int col=0; col < mcol; ++col) {
-			int no_puncture_flag = ( puncture_8023ca_flag && (col >= (69-2)) ) - 1;
-			Vec8i nopunc_int = no_puncture_flag;
-			Vec8f nopunc_mask = reinterpret_f(nopunc_int);
+			//int no_puncture_flag = ( puncture_8023ca_flag && (col >= (69-2)) ) - 1;
+			//Vec8i nopunc_int = no_puncture_flag;
+			//Vec8f nopunc_mask = reinterpret_f(nopunc_int);
+			uint8_t *puncture_bytep = (uint8_t *)(puncture_mask+col);
+			uint8_t *filler_bytep = (uint8_t *)(filler_mask+col);
 			for (int byte_cnt=0; byte_cnt < last_byte_iter; ++byte_cnt) {
 				uint8_t byte_val = *enc_cw_byteptr++;
 				Vec8i PosOne =  1;
@@ -73,7 +76,16 @@ unsigned gen_metrics(unsigned num_codeword, float SNR, unsigned char *enc_cw_byt
 				Vec8f LLR = Rx_sig * sigma_factor;	//this is the true LLR if LLR_scaling_factor is 1.0
 				LLR = min( max_abs_LLR, LLR );
 				LLR = max(-max_abs_LLR, LLR );
-				LLR = LLR & nopunc_mask;
+
+				Vec8fb puncture_bool, filler_bool;
+				puncture_bool.load_bits(*puncture_bytep);
+				filler_bool.load_bits(*filler_bytep);
+				LLR = select( puncture_bool, 0.0, LLR );
+				LLR = select( filler_bool, max_abs_LLR, LLR );
+				++puncture_bytep;
+				++filler_bytep;
+
+				//LLR = LLR & nopunc_mask;
 
 				//convert to 8 of whatever the Decode Metric type is, and store it
 				#if ( SIMD_ELEM_BW == -64 )

@@ -7,7 +7,7 @@ use Time::HiRes qw( gettimeofday tv_interval );
 #default values - can be overridden by command line evals
 $exec = 'LDPCtop_Vec64c_min';
 $MatrixSet = '11ad 1/2';
-$num_par = 1; #max is 9
+$num_par = 6; #max is 9
 $simd_size = 512; #SIMD word size for Decode words (256 or 512)
 $elem_size = 8; #Element size in bits (32 for float, 64 for double, 8/16/32 for int)
 $gen_dat_flag = 1; #generate encode and decode .dat files (else use existing ones)
@@ -22,8 +22,8 @@ $gen_dat_flag = 1; #generate encode and decode .dat files (else use existing one
 #@time_fer = (30, 10*60, 24*3600); #last time is max wall clock - exit after report exceeding this
 
 $outer_count  = 10; #reports made on each outer iteration
-$inner_count  = 200; #number of times each block of "num_codeword" is decoded
-$num_codeword = 500; #These are "super" codewords including parallelism in one chunk of memory
+$inner_count  = 100; #100000; #number of times each block of "num_codeword" is decoded
+$num_codeword = 1; #These are "super" codewords including parallelism in one chunk of memory
 $max_iter = 10; #50;
 
 $max_row_metric = 31;
@@ -80,11 +80,17 @@ $int_vals  = pack('L6',$outer_count,$inner_count,$num_codeword,$max_iter,$punctu
 $flt_vals = pack('f7',$max_row_metric,$LLR_scaling_factor,$max_abs_LLR,$beta_offset,$SNR_start,$SNR_end,$SNR_step);
 
 $sim_vals = $int_vals . $flt_vals . pack('Q64',@randval) . pack('Z128',$enc_raw_file) . pack('Z128',$dec_raw_file);
+if (1) { #this is for running the decoder in debug mode with the saved simulation values
+	open(SIM,">sim_vals.bin") || die;
+	print SIM $sim_vals;
+	close SIM
+}
 
 $matlab_exe = ($ENV{'USEOCT'} == 1) ? 'octave --eval' : 'matlab -batch';
 if ( $gen_dat_flag ) { #generate the Encoder and Decoder structure files
 	$zstr = (defined $z_over) ? "z_over=$z_over" : '';
 	$cmd = "$matlab_exe \"MatrixSet=\'$MatrixSet\';num_par=$num_par;simd_size=$simd_size;elem_size=$elem_size;$zstr;gen_structs\"";
+	print "$cmd\n";
 	system($cmd);
 }
 
@@ -154,10 +160,10 @@ sub parse_line {
 		($super_cw_per_loop) = m/^CW Count: (\d+)/;
 	}
 	if ( /^Matrix Params/ ) {
-		($Z,$Hcol,$Hrow,$num_par_cw) = m/Z=(\d+)  Hcol=(\d+)  Hrow=(\d+) num_par_cw=(\d+)/;
+		($Z,$Hcol,$Hrow,$num_par_cw,$fill_cnt) = m/Z=(\d+)  Hcol=(\d+)  Hrow=(\d+) num_par_cw=(\d+) fill_cnt=(\d+)/;
 		$cw_per_loop = $super_cw_per_loop * $num_par_cw;
 		$bit_per_scw = $Z * $Hcol;
-		$data_bit_per_scw = $Z * ($Hcol - $Hrow);
+		$data_bit_per_scw = $Z * ($Hcol - $Hrow) - $fill_cnt;
 	}
 	if ( /^loop/ ) {
 		@vals = m/SNR=(\S+)\s+inp_bit_err=(\S+)\s+tot_iter=(\S+)\s+tot_bit_err=(\S+)\s+tot_cw_err=(\S+)\s+tot_dec_ticks=(\S+)/;

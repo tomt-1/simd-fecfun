@@ -11,6 +11,12 @@ if ( isequal(MatrixSet,'802.3ca') )
 	Hc(1,:) = Hc(2,:);
 	Hc(2,:) = tmp;
 end
+%if ( isequal(MatrixSet(1:5),'5GNR_') )
+%	%put row 4 first, so first two mrows only have 1 punctured mcol
+%	tmp = Hc(1,:);
+%	Hc(1,:) = Hc(4,:);
+%	Hc(4,:) = tmp;
+%end
 
 Hlog = (Hc >= 0);	%H logical.  1=> submatrix is not ZxZ zero array
 

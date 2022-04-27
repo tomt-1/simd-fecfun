@@ -1,4 +1,4 @@
-function [H NumInfoBits invM2tM1] = gen_encode(Hc,z_value,num_par,inv_method,inv_filename,direct_cols,subst_row,subst_col)
+function [H NumInfoBits invM2tM1] = gen_encode(Hc,z_value,num_par,inv_method,inv_filename,direct_cols,subst_row,subst_col,punc_fill_list)
 %create encode data for compiled function.  Return items so that
 %example test vectors can be created and checked
 
@@ -66,7 +66,20 @@ end
 
 par_colnum = [direct_cols subst_col]-1; %make both 0-based for data file
 
+%deal with puncture and fill locations
+if ( length(punc_fill_list) > 0 )
+	punc_cnt = punc_fill_list(1);
+	fill_cnt = punc_fill_list(2);
+	punc_list = punc_fill_list(3:2+punc_cnt);
+	fill_list = punc_fill_list(3+punc_cnt:end);
+else
+	punc_cnt = 0;
+	fill_cnt = 0;
+	punc_list = [];
+	fill_list = [];
+end
+
 %write out all information
 fs = fopen('LDPCencode.raw.dat','w');
-fwrite(fs,[z_value num_par mrow mcol col_cnts par_colnum par_offset],'int32');
+fwrite(fs,[z_value punc_cnt fill_cnt num_par mrow mcol col_cnts par_colnum par_offset punc_list fill_list],'int32');
 fclose(fs);

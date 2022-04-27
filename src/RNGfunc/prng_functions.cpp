@@ -60,6 +60,17 @@ Vec4uq rand_xoshiro_N(int rand_sel) {
 	return result;
 }
 
+//4 parallel PRNGs using rdrand64_step intrinsic
+Vec4uq rand_randr(void) {
+	Vec4uq rand_ret;
+	long long unsigned *rpt = (long long unsigned *)&rand_ret;
+	for (int i=0; i < 4; ++i) {
+		_rdrand64_step(rpt);	//could check return value if desired
+		++rpt;
+	}
+	return rand_ret;
+}
+
 //note that the output of PRNG functions is inverted to minimize "zero-land" effects
 //(This puts near-zeros in the middle of Gaussian distribution instead of the edges)
 

@@ -51,7 +51,7 @@ Percent time all proc= 100.0%    Approx. Decode percentage= 82.2%
 
 In this report, decode percentage is time spent decoding -- the rest is encoding, noise/metric generation and overhead.  The percentage of time in which all processes are executing is also listed (always 100% if num_proc=1).  The codeword decode rate is only measured during this time.  The time after the first process finishes will still impact the error rate totals, but not the reported codewords decoded per second.
 
-Finally, a longer example.  This uses single-precision floating point and the sum-product algorithm.  The tanh/atanh calculations are much slower than min-sum.  The 802.16e LDPC matrices allow for Z sizes from 24 to 96.  Here, we will see the performance for different Z sizes.  From the "build" directory, source example_run.src.  If it takes too long, reduce the num_codeword argument.  After it completes, run matlab or octave and run the final commands:
+Up next is a longer example.  This uses single-precision floating point and the sum-product algorithm.  The tanh/atanh calculations are much slower than min-sum.  The 802.16e LDPC matrices allow for Z sizes from 24 to 96.  Here, we will see the performance for different Z sizes.  From the "build" directory, source example_run.src.  If it takes too long, reduce the num_codeword argument.  After it completes, run matlab or octave and run the final commands:
 ```bash
 rm ldpc_stat.m (if it exists)
 source example_run.src
@@ -72,7 +72,8 @@ The quasi-cyclic matrices supported by the LDPC script run_LDPCsim.pl (through t
 '11n 1/2 z27', '11n 2/3 z27', '11n 3/4 z27', '11n 5/6 z27',
 '11n 1/2 z54', '11n 2/3 z54', '11n 3/4 z54', '11n 5/6 z54',
 '11n 1/2 z81', '11n 2/3 z81', '11n 3/4 z81', '11n 5/6 z81',
-'ITU G.hn 1/2 z14'
+'ITU G.hn 1/2 z14',
+'5GNR_n<cw bits>_k<info bit>'
 
 Additional parity matrices can be manually added to the GetHMatrix.m and encode_method.m files
 
