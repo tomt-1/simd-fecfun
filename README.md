@@ -73,7 +73,7 @@ The quasi-cyclic matrices supported by the LDPC script run_LDPCsim.pl (through t
 '11n 1/2 z54', '11n 2/3 z54', '11n 3/4 z54', '11n 5/6 z54',
 '11n 1/2 z81', '11n 2/3 z81', '11n 3/4 z81', '11n 5/6 z81',
 'ITU G.hn 1/2 z14',
-'5GNR_n<cw bits>_k<info bit>'
+'5GNR_n#_k#'
 
 Additional parity matrices can be manually added to the GetHMatrix.m and encode_method.m files
 
